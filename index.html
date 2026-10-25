@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ff5c93">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Points magiques">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Points magiques</title>
+<style>
+:root{--rose:#ff5c93;--prune:#3b1b4a;--bg:#fff0f6;--a:#e0397a;--b:#b78cff;--soft:#ffeaf3}
+.t-leon{--a:#0b1f4b;--b:#e30613;--soft:#e8eeff}
+.t-rose{--a:#d4306f;--b:#b78cff;--soft:#ffeaf3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--prune);font-family:ui-rounded,"Arial Rounded MT Bold","Segoe UI",system-ui,sans-serif;font-size:17px}
+#app{max-width:520px;margin:0 auto;padding:16px 14px 100px;padding-top:max(16px,env(safe-area-inset-top))}
+h1{font-size:28px;margin:4px 0 14px;text-align:center}
+h2{font-size:20px;margin:22px 0 8px}
+button{font:inherit;color:inherit;cursor:pointer}
+.card{background:#fff;border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:0 2px 0 rgba(59,27,74,.08)}
+.kid{display:block;width:100%;border:0;text-align:left;background:var(--soft);border-radius:26px;padding:16px;margin-bottom:14px;border-left:10px solid var(--b)}
+.kid .m{font-size:56px;float:right}
+.kid b{font-size:26px;display:block}
+.bar{height:20px;background:#fff;border-radius:12px;overflow:hidden;border:2px solid var(--a);margin:10px 0 4px}
+.bar i{display:block;height:100%;background:var(--b);border-radius:10px;transition:width .6s}
+.sm{font-size:14px;opacity:.75}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.act{border:0;background:#fff;border-radius:22px;padding:14px 8px;text-align:center;min-height:118px;box-shadow:0 3px 0 var(--a);font-weight:700;line-height:1.2}
+.act:active{transform:translateY(3px);box-shadow:none}
+.act span{display:block;font-size:44px;margin-bottom:4px}
+.big{font-size:64px;text-align:center;display:block;margin:0 auto}
+.jump{animation:jump .7s ease 2}
+@keyframes jump{0%,100%{transform:translateY(0)}40%{transform:translateY(-34px) rotate(-8deg)}70%{transform:translateY(0) rotate(6deg)}}
+.btn{border:0;background:var(--a);color:#fff;border-radius:16px;padding:12px 16px;font-weight:700}
+.btn.alt{background:#fff;color:var(--a);border:2px solid var(--a)}
+.btn.ko{background:#c0392b}
+.row{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.row>*{flex:0 0 auto}
+.row .g{flex:1 1 120px}
+input{font:inherit;border:2px solid #e3cfe0;border-radius:12px;padding:9px;min-width:0;width:100%}
+input.n{width:70px;text-align:center}input.e{width:58px;text-align:center}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:2px solid #f1d3e2;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{flex:1;border:0;background:none;padding:10px 0 8px;font-size:13px}
+nav button span{display:block;font-size:26px}
+nav .on{color:var(--rose);font-weight:700}
+.tabs{display:flex;gap:8px;margin-bottom:12px}.tabs button{flex:1}
+.day{margin:14px 0 6px;font-weight:700;text-transform:capitalize}
+.ev{display:flex;gap:10px;align-items:center;background:#fff;border-radius:14px;padding:8px 12px;margin-bottom:6px}
+.ev b{margin-left:auto}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal div{background:#fff;border-radius:10px;min-height:48px;padding:3px;font-size:12px}
+.cal .h{background:none;min-height:0;font-weight:700}
+.cal em{display:block;font-style:normal;font-size:15px;color:var(--b);font-weight:700}
+#toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--prune);color:#fff;padding:12px 18px;border-radius:18px;z-index:9;max-width:88%;text-align:center}
+.cf{position:fixed;top:-40px;z-index:8;pointer-events:none;animation:fall 2.6s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+.badge{background:var(--b);color:#fff;border-radius:10px;padding:0 7px;font-size:13px}
+@media (prefers-reduced-motion:reduce){.cf{display:none}.jump{animation:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav id="nav"></nav>
+<script>
+const KEY='points-magiques-v1';
+const REW=['Sortie','Film en famille','Choisir le repas','Jeu avec papa ou maman'];
+const def=()=>({code:'',kids:{leon:{n:'Léon',m:'⚽',r:REW[0],g:20},rose:{n:'Rose',m:'🦄',r:REW[0],g:20}},
+acts:[['🛏️','Ranger sa chambre',1],['🍽️','Mettre la table',1],['🪥','Se brosser les dents',1],['🤝','Aider son frère ou sa sœur',1],['📚','Faire ses devoirs',1],['🙏','Être poli',1],['🥦','Manger ses légumes',1],['🌙','Se coucher à l\'heure',1],['🌟','Super bonus',3]].map((a,i)=>({id:'a'+i,e:a[0],t:a[1],p:a[2]})),log:[]});
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.kids&&s.acts&&s.log)return s}catch(e){}return def()}
+let S=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Sauvegarde impossible sur cet appareil')}}
+let V={tab:'home',kid:null,par:false,hk:'leon',hv:'list',month:new Date(),setup:''};
+const $=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const bal=k=>S.log.filter(l=>l.k==k&&l.st=='ok').reduce((s,l)=>s+l.p,0);
+const pend=()=>S.log.filter(l=>l.st=='pending');
+const dkey=t=>{const x=new Date(t);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+function say(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='fr-FR';u.rate=.9;speechSynthesis.speak(u)}catch(e){}}
+function snd(n){try{const c=new (window.AudioContext||window.webkitAudioContext)();[660,880,1100].slice(0,n).forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain(),t=c.currentTime+i*.12;o.frequency.value=f;o.connect(g);g.connect(c.destination);g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.001,t+.2);o.start(t);o.stop(t+.22)})}catch(e){}}
+function conf(k){const s=k=='leon'?['⚽','❤️','🏆','⭐']:['🦄','❤️','❄️','✨'];for(let i=0;i<30;i++){const e=document.createElement('span');e.className='cf';e.textContent=s[i%4];e.style.left=Math.random()*100+'vw';e.style.animationDelay=Math.random()*.6+'s';e.style.fontSize=(18+Math.random()*18)+'px';document.body.appendChild(e);setTimeout(()=>e.remove(),3300)}}
+let tt;function toast(t){let e=$('#toast');if(!e){e=document.createElement('div');e.id='toast';document.body.appendChild(e)}e.textContent=t;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>e.style.display='none',2800)}
+function jump(){const m=$('.big');if(m){m.classList.remove('jump');void m.offsetWidth;m.classList.add('jump')}}
+function prog(k){const K=S.kids[k],b=Math.max(0,bal(k)),p=Math.min(100,Math.round(b/K.g*100));return `<div class="bar"><i style="width:${p}%"></i></div><div class="sm">${b} / ${K.g} ❤️ pour : ${esc(K.r)}</div>`}
+function vHome(){return `<h1>✨ Points magiques ✨</h1>`+['leon','rose'].map(k=>{const K=S.kids[k];return `<button class="kid t-${k}" data-a="kid" data-k="${k}"><span class="m">${K.m}</span><b>${esc(K.n)}</b><span style="font-size:22px">❤️ ${bal(k)}</span>${prog(k)}</button>`}).join('')}
+function vKid(){const k=V.kid,K=S.kids[k],ready=bal(k)>=K.g;
+return `<button class="btn alt" data-a="home">← Retour</button><span class="big" style="margin-top:6px">${K.m}</span><h1>${esc(K.n)} : ❤️ ${bal(k)}</h1><div class="card">${prog(k)}${ready?`<p><b>🎉 Récompense prête !</b> Demande à papa ou maman.</p>`:''}<button class="btn" data-a="say" data-t="${esc(K.n)}, tu as ${bal(k)} cœurs. Ta récompense : ${esc(K.r)}">🔊 Écouter</button></div><h2>Qu'est-ce que tu as fait ?</h2><div class="grid">${S.acts.map(a=>`<button class="act" data-a="ask" data-id="${a.id}"><span>${esc(a.e)}</span>${esc(a.t)}</button>`).join('')}</div>${pend().filter(l=>l.k==k).length?`<p class="sm">⏳ En attente de validation : ${pend().filter(l=>l.k==k).length}</p>`:''}`}
+function vHist(){const k=V.hk,L=S.log.filter(l=>l.k==k).sort((a,b)=>b.ts-a.ts);
+let h=`<h1>📅 Historique</h1><div class="tabs">${['leon','rose'].map(x=>`<button class="btn ${x==k?'':'alt'}" data-a="hk" data-k="${x}">${S.kids[x].m} ${esc(S.kids[x].n)}</button>`).join('')}</div><div class="tabs"><button class="btn ${V.hv=='list'?'':'alt'}" data-a="hv" data-v="list">Liste</button><button class="btn ${V.hv=='cal'?'':'alt'}" data-a="hv" data-v="cal">Calendrier</button></div>`;
+if(V.hv=='list'){if(!L.length)return h+'<p>Pas encore de cœurs. Choisis une bonne action !</p>';let d='';L.forEach(l=>{const dk=dkey(l.ts);if(dk!=d){d=dk;h+=`<div class="day">${new Date(l.ts).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</div>`}h+=`<div class="ev"><span>${esc(l.e)}</span>${esc(l.a)}<b>${l.st=='pending'?'⏳':(l.p>0?'+':'')+l.p+' ❤️'}</b></div>`})}
+else{const m=V.month,y=m.getFullYear(),mo=m.getMonth(),first=(new Date(y,mo,1).getDay()+6)%7,n=new Date(y,mo+1,0).getDate(),c={};L.filter(l=>l.st=='ok'&&l.p>0).forEach(l=>{c[dkey(l.ts)]=(c[dkey(l.ts)]||0)+l.p});
+h+=`<div class="row"><button class="btn alt" data-a="mo" data-d="-1">◀</button><b class="g" style="text-align:center;text-transform:capitalize">${m.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</b><button class="btn alt" data-a="mo" data-d="1">▶</button></div><div class="cal">${['L','M','M','J','V','S','D'].map(x=>`<div class="h">${x}</div>`).join('')}${'<span></span>'.repeat(first)}`;
+for(let i=1;i<=n;i++){const v=c[y+'-'+String(mo+1).padStart(2,'0')+'-'+String(i).padStart(2,'0')];h+=`<div>${i}${v?`<em>${v}❤️</em>`:''}</div>`}h+='</div>'}
+return h}
+function pad(msg,act){return `<h1>🔒 Espace parent</h1><div class="card"><p>${msg}</p><input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="4 chiffres" autocomplete="off"><div class="row"><button class="btn" data-a="${act}">Valider</button></div><p class="sm">${esc(V.setup)}</p></div>`}
+function vPar(){if(!S.code)return pad('Choisis un code à 4 chiffres. Retiens-le bien : il ne peut pas être retrouvé.','setcode');if(!V.par)return pad('Entre ton code.','unlock');
+const P=pend();
+let h=`<h1>🔒 Espace parent</h1><h2>À valider (${P.length})</h2>`;
+h+=P.length?P.map(l=>`<div class="ev"><span>${S.kids[l.k].m}</span><span class="g">${esc(l.a)}</span><b>+${l.p}</b><button class="btn" data-a="ok" data-id="${l.id}">✓</button><button class="btn ko" data-a="del" data-id="${l.id}">✕</button></div>`).join(''):'<p class="sm">Rien en attente.</p>';
+h+=`<h2>Récompenses</h2><datalist id="rew">${REW.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`+['leon','rose'].map(k=>{const K=S.kids[k];return `<div class="card"><b>${K.m} ${esc(K.n)}</b> : ${bal(k)} ❤️<div class="row"><input class="g" list="rew" data-f="rw" data-k="${k}" value="${esc(K.r)}"><input class="n" type="number" min="1" data-f="gl" data-k="${k}" value="${K.g}"></div>${bal(k)>=K.g?`<button class="btn" data-a="give" data-k="${k}">🎁 Récompense donnée (−${K.g} ❤️)</button>`:''}</div>`}).join('');
+h+=`<h2>Bonnes actions</h2><div class="card">${S.acts.map(a=>`<div class="row"><input class="e" data-f="ae" data-id="${a.id}" value="${esc(a.e)}"><input class="g" data-f="at" data-id="${a.id}" value="${esc(a.t)}"><input class="n" type="number" min="1" data-f="ap" data-id="${a.id}" value="${a.p}"><button class="btn ko" data-a="delact" data-id="${a.id}">✕</button></div>`).join('')}<button class="btn" data-a="addact">+ Ajouter une action</button></div>`;
+h+=`<h2>Corriger un point</h2>`+['leon','rose'].map(k=>{const L=S.log.filter(l=>l.k==k&&l.st=='ok').sort((a,b)=>b.ts-a.ts).slice(0,5);return `<div class="card"><b>${S.kids[k].m} ${esc(S.kids[k].n)}</b>${L.map(l=>`<div class="row"><span class="g">${esc(l.e)} ${esc(l.a)} (${l.p>0?'+':''}${l.p})</span><button class="btn ko" data-a="del" data-id="${l.id}">Annuler</button></div>`).join('')||'<p class="sm">Aucun point.</p>'}<button class="btn alt" data-a="reset" data-k="${k}">Remettre à zéro</button></div>`}).join('');
+h+=`<h2>Sauvegarde</h2><div class="card"><p class="sm">Les points restent dans ce navigateur. Fais une sauvegarde de temps en temps.</p><div class="row"><button class="btn" data-a="export">Sauvegarder</button><button class="btn alt" data-a="import">Restaurer</button></div><input id="imp" type="file" accept=".json,application/json" hidden></div><div class="row"><button class="btn alt" data-a="chgcode">Changer le code</button><button class="btn alt" data-a="lock">Verrouiller</button></div>`;
+return h}
+function render(){if(V.tab!='par')V.par=false;const t=V.tab=='kid'?V.kid:(V.tab=='home'?'':'');$('#app').className=t?'t-'+t:'';
+$('#app').innerHTML=V.tab=='home'?vHome():V.tab=='kid'?vKid():V.tab=='hist'?vHist():vPar();
+const n=pend().length,T=V.tab=='kid'?'home':V.tab;
+$('#nav').innerHTML=[['home','🏠','Accueil'],['hist','📅','Historique'],['par','🔒','Parent']].map(x=>`<button class="${T==x[0]?'on':''}" data-a="tab" data-t="${x[0]}"><span>${x[1]}</span>${x[2]}${x[0]=='par'&&n?` <i class="badge">${n}</i>`:''}</button>`).join('')}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,d=b.dataset;
+if(a=='tab'){V.tab=d.t;if(d.t!='par')V.par=V.par;render()}
+else if(a=='home'){V.tab='home';render()}
+else if(a=='kid'){V.kid=d.k;V.tab='kid';render();say(S.kids[d.k].n)}
+else if(a=='say')say(d.t)
+else if(a=='ask'){const x=S.acts.find(z=>z.id==d.id);if(!x)return;S.log.push({id:uid(),k:V.kid,a:x.t,e:x.e,p:x.p,ts:Date.now(),st:'pending'});save();say(x.t);snd(2);render();jump();toast('Demande envoyée ! Papa ou maman va valider.')}
+else if(a=='hk'){V.hk=d.k;render()}
+else if(a=='hv'){V.hv=d.v;render()}
+else if(a=='mo'){V.month=new Date(V.month.getFullYear(),V.month.getMonth()+ +d.d,1);render()}
+else if(a=='setcode'){const v=$('#pin').value;if(!/^\d{4}$/.test(v)){V.setup='Entre exactement 4 chiffres.';return render()}S.code=v;V.par=true;V.setup='';save();render()}
+else if(a=='unlock'){if($('#pin').value==S.code){V.par=true;V.setup='';render()}else{V.setup='Code incorrect. Réessaie.';render()}}
+else if(a=='lock'){V.par=false;render()}
+else if(a=='chgcode'){S.code='';V.par=false;V.setup='';save();render()}
+else if(a=='ok'){const l=S.log.find(z=>z.id==d.id);if(!l)return;l.st='ok';save();render();snd(3);conf(l.k);toast('Bravo '+S.kids[l.k].n+' ! +'+l.p+' ❤️');if(bal(l.k)>=S.kids[l.k].g)toast('🎉 '+S.kids[l.k].n+' a gagné : '+S.kids[l.k].r)}
+else if(a=='del'){if(!confirm('Annuler cette ligne ?'))return;S.log=S.log.filter(z=>z.id!=d.id);save();render()}
+else if(a=='give'){const K=S.kids[d.k];S.log.push({id:uid(),k:d.k,a:'Récompense : '+K.r,e:'🎁',p:-K.g,ts:Date.now(),st:'ok'});save();render();conf(d.k);snd(3)}
+else if(a=='addact'){S.acts.push({id:'a'+uid(),e:'⭐',t:'Nouvelle action',p:1});save();render()}
+else if(a=='delact'){if(!confirm('Supprimer cette action ?'))return;S.acts=S.acts.filter(z=>z.id!=d.id);save();render()}
+else if(a=='reset'){if(!confirm('Remettre à zéro les points de '+S.kids[d.k].n+' ? L\'historique sera effacé.'))return;S.log=S.log.filter(z=>z.k!=d.k);save();render()}
+else if(a=='export'){const u=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'})),x=document.createElement('a');x.href=u;x.download='points-magiques-sauvegarde.json';document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast('Sauvegarde téléchargée')}
+else if(a=='import')$('#imp').click();
+});
+document.addEventListener('change',e=>{const t=e.target,d=t.dataset;
+if(t.id=='imp'&&t.files[0]){const r=new FileReader();r.onload=()=>{try{const s=JSON.parse(r.result);if(!s.kids||!s.acts||!s.log)throw 0;if(!confirm('Remplacer les données actuelles par la sauvegarde ?'))return;S=s;save();render();toast('Sauvegarde restaurée')}catch(x){toast('Fichier non valide')}};r.readAsText(t.files[0]);return}
+if(!d.f)return;
+if(d.f=='rw')S.kids[d.k].r=t.value.trim()||REW[0];
+else if(d.f=='gl')S.kids[d.k].g=Math.max(1,parseInt(t.value)||20);
+else{const a=S.acts.find(z=>z.id==d.id);if(!a)return;if(d.f=='ae')a.e=t.value||'⭐';if(d.f=='at')a.t=t.value||'Action';if(d.f=='ap')a.p=Math.max(1,parseInt(t.value)||1)}
+save();toast('Enregistré')});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+render();
+</script>
+</body>
+</html>
